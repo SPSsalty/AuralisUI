@@ -113,7 +113,7 @@ function AuralisUI:CreateWindow(config)
     return window
 end
 
--- AddTab (fixed)
+-- AddTab (fixed with nil guards)
 function AuralisUI:AddTab(name)
     local btn = Instance.new("TextButton", self.TabBar)
     btn.Name                   = name.."TabBtn"
@@ -145,10 +145,11 @@ function AuralisUI:AddTab(name)
         __index = function(self, fn)
             if fn == "AddLeftGroupbox" then
                 return function(_, title)
+                    local rowCount = (self.Rows or 0)
                     local grp = Instance.new("Frame", self.Frame)
                     grp.Name                   = title.."Group"
                     grp.Size                   = UDim2.new(0,280,0,200)
-                    grp.Position               = UDim2.new(0,10,0,10 + self.Rows*210)
+                    grp.Position               = UDim2.new(0,10,0,10 + rowCount*210)
                     grp.BackgroundTransparency = 1
                     styleFrame(grp)
                     local hdr = Instance.new("TextLabel", grp)
@@ -158,14 +159,16 @@ function AuralisUI:AddTab(name)
                     hdr.TextSize               = 18
                     hdr.TextColor3             = AuralisUI.Colors.Text
                     hdr.Text                   = title
-                    self.Rows = self.Rows + 1
+                    self.Rows = rowCount + 1
+
                     return setmetatable({Parent=grp, Row=0}, {
-                        __index = function(_, method)
+                        __index = function(self, method)
                             if method == "AddToggle" then
                                 return function(_, key, opts)
+                                    local r = (self.Row or 0)
                                     local f = Instance.new("Frame", grp)
                                     f.Size                   = UDim2.new(1,-10,0,30)
-                                    f.Position               = UDim2.new(0,5,0,30*self.Row+34)
+                                    f.Position               = UDim2.new(0,5,0,30*r + 34)
                                     f.BackgroundTransparency = 1
                                     local lbl = Instance.new("TextLabel", f)
                                     lbl.Size                   = UDim2.new(0.7,0,1,0)
@@ -175,40 +178,40 @@ function AuralisUI:AddTab(name)
                                     lbl.TextColor3             = AuralisUI.Colors.Text
                                     lbl.Text                   = opts.Text or key
                                     local btn = Instance.new("TextButton", f)
-                                    btn.Size                 = UDim2.new(0,30,0,20)
-                                    btn.Position             = UDim2.new(1,-35,0,5)
-                                    btn.AutoButtonColor      = false
-                                    btn.BackgroundColor3     = opts.Default and AuralisUI.Colors.Secondary or AuralisUI.Colors.Primary
-                                    btn.Text                 = ""
+                                    btn.Size                   = UDim2.new(0,30,0,20)
+                                    btn.Position               = UDim2.new(1,-35,0,5)
+                                    btn.AutoButtonColor        = false
+                                    btn.BackgroundColor3       = opts.Default and AuralisUI.Colors.Secondary or AuralisUI.Colors.Primary
+                                    btn.Text                   = ""
                                     btn.MouseButton1Click:Connect(function()
                                         opts.Default = not opts.Default
                                         opts.Callback(opts.Default)
-                                        TweenService:Create(btn, TweenInfoFast, {
-                                            BackgroundColor3 = opts.Default and AuralisUI.Colors.Secondary or AuralisUI.Colors.Primary
-                                        }):Play()
+                                        TweenService:Create(btn, TweenInfoFast, {BackgroundColor3 = opts.Default and AuralisUI.Colors.Secondary or AuralisUI.Colors.Primary}):Play()
                                     end)
-                                    self.Row = self.Row + 1
+                                    self.Row = r + 1
                                     return btn
                                 end
                             elseif method == "AddButton" then
                                 return function(_, txt, cb)
+                                    local r = (self.Row or 0)
                                     local b = Instance.new("TextButton", grp)
-                                    b.Size                 = UDim2.new(1,-10,0,30)
-                                    b.Position             = UDim2.new(0,5,0,30*self.Row+34)
-                                    b.Font                 = Enum.Font.Gotham
-                                    b.TextSize             = 16
-                                    b.TextColor3           = AuralisUI.Colors.Text
-                                    b.BackgroundColor3     = AuralisUI.Colors.Secondary
-                                    b.Text                 = txt
+                                    b.Size                   = UDim2.new(1,-10,0,30)
+                                    b.Position               = UDim2.new(0,5,0,30*r + 34)
+                                    b.Font                   = Enum.Font.Gotham
+                                    b.TextSize               = 16
+                                    b.TextColor3             = AuralisUI.Colors.Text
+                                    b.BackgroundColor3       = AuralisUI.Colors.Secondary
+                                    b.Text                   = txt
                                     b.MouseButton1Click:Connect(cb)
-                                    self.Row = self.Row + 1
+                                    self.Row = r + 1
                                     return b
                                 end
                             elseif method == "AddSlider" then
                                 return function(_, key, opts)
+                                    local r = (self.Row or 0)
                                     local f = Instance.new("Frame", grp)
                                     f.Size                   = UDim2.new(1,-10,0,40)
-                                    f.Position               = UDim2.new(0,5,0,40*self.Row+34)
+                                    f.Position               = UDim2.new(0,5,0,40*r + 34)
                                     f.BackgroundTransparency = 1
                                     local lbl = Instance.new("TextLabel", f)
                                     lbl.Size                   = UDim2.new(1,0,0,20)
@@ -218,10 +221,10 @@ function AuralisUI:AddTab(name)
                                     lbl.TextColor3             = AuralisUI.Colors.Text
                                     lbl.Text                   = (opts.Text or key)..": "..opts.Default
                                     local box = Instance.new("TextBox", f)
-                                    box.Size               = UDim2.new(1,-10,0,20)
-                                    box.Position           = UDim2.new(0,5,0,20)
-                                    box.ClearTextOnFocus   = false
-                                    box.Text               = tostring(opts.Default)
+                                    box.Size                   = UDim2.new(1,-10,0,20)
+                                    box.Position               = UDim2.new(0,5,0,20)
+                                    box.ClearTextOnFocus       = false
+                                    box.Text                   = tostring(opts.Default)
                                     box.FocusLost:Connect(function()
                                         local num = tonumber(box.Text)
                                         if num then
@@ -231,14 +234,15 @@ function AuralisUI:AddTab(name)
                                             box.Text = tostring(opts.Default)
                                         end
                                     end)
-                                    self.Row = self.Row + 1
+                                    self.Row = r + 1
                                     return box
                                 end
                             elseif method == "AddDropdown" then
                                 return function(_, key, opts)
+                                    local r = (self.Row or 0)
                                     local f = Instance.new("Frame", grp)
                                     f.Size                   = UDim2.new(1,-10,0,30)
-                                    f.Position               = UDim2.new(0,5,0,30*self.Row+34)
+                                    f.Position               = UDim2.new(0,5,0,30*r + 34)
                                     f.BackgroundTransparency = 1
                                     local lbl = Instance.new("TextLabel", f)
                                     lbl.Size                   = UDim2.new(0.6,0,1,0)
@@ -278,7 +282,7 @@ function AuralisUI:AddTab(name)
                                     btn.MouseButton1Click:Connect(function()
                                         list.Visible = not list.Visible
                                     end)
-                                    self.Row = self.Row + 1
+                                    self.Row = r + 1
                                     return btn
                                 end
                             end
