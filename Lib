@@ -124,31 +124,46 @@ function AuralisUI:CreateWindow(config)
 end
 
 -- Add Tab
-function AuralisUI:AddTab(name)
-    local btn = Instance.new("TextButton", self.TabBar)
-    btn.Name                       = name.."TabBtn"
-    btn.Size                       = UDim2.new(0,100,1,0)
-    btn.BackgroundTransparency     = 1
-    btn.Font                       = Enum.Font.Gotham
-    btn.TextSize                   = 18
-    btn.TextColor3                 = self.Colors.Text
-    btn.Text                       = name
 
+function AuralisUI:AddTab(name)
+    -- create tab button
+    local btn = Instance.new("TextButton", self.TabBar)
+    btn.Name               = name.."TabBtn"
+    btn.Size               = UDim2.new(0,100,1,0)
+    btn.BackgroundTransparency = 1
+    btn.Font               = Enum.Font.Gotham
+    btn.TextSize           = 18
+    btn.TextColor3         = self.Colors.Text
+    btn.Text               = name
+
+    -- create content frame
     local tabFrame = Instance.new("Frame", self.Content)
-    tabFrame.Name                   = name.."Tab"
-    tabFrame.Size                   = UDim2.new(1,0,1,0)
-    tabFrame.Position               = UDim2.new(1,0,0,0)
+    tabFrame.Name                = name.."Tab"
+    tabFrame.Size                = UDim2.new(1,0,1,0)
+    tabFrame.Position            = UDim2.new(1,0,0,0)
     tabFrame.BackgroundTransparency = 1
 
-    btn.MouseButton1Click:Connect(function()
-        for _,t in ipairs(self.Tabs) do
-            TweenService:Create(t.Frame, TweenInfoFast, {Position=UDim2.new(1,0,0,0)}):Play()
+    -- tab‑showing function
+    local function showTab()
+        for _, t in ipairs(self.Tabs) do
+            TweenService:Create(t.Frame, TweenInfoFast, {Position = UDim2.new(1,0,0,0)}):Play()
         end
-        TweenService:Create(tabFrame, TweenInfoFast, {Position=UDim2.new(0,0,0,0)}):Play()
-    end)
+        TweenService:Create(tabFrame, TweenInfoFast, {Position = UDim2.new(0,0,0,0)}):Play()
+    end
 
-    table.insert(self.Tabs, {Button=btn, Frame=tabFrame})
-    if #self.Tabs==1 then btn:CaptureFocus(); btn:MouseButton1Click() end
+    -- hook click
+    btn.MouseButton1Click:Connect(showTab)
+
+    -- register
+    table.insert(self.Tabs, {Button = btn, Frame = tabFrame})
+
+    -- auto‑select first tab
+    if #self.Tabs == 1 then
+        showTab()
+    end
+
+    -- return groupbox factory (unchanged)
+    return setmetatable({Frame = tabFrame, Rows = 0}, {/*… your groupbox methods …*/})
 
     -- Groupbox factory
     return setmetatable({Frame=tabFrame, Rows=0}, {
