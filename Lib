@@ -141,16 +141,21 @@ function AuralisUI:AddTab(name)
     table.insert(self.Tabs, {Button = btn, Frame = tabFrame})
     if #self.Tabs == 1 then showTab() end
 
-    -- Create helper object for adding groupboxes
-    local tabObj = {Frame = tabFrame, Rows = 0}
+    -- Create helper object for groupboxes
+    local groupHelper = {Frame = tabFrame, Rows = 0}
+    groupHelper.__index = groupHelper
 
-    -- Left groupbox
-    function tabObj:AddLeftGroupbox(title)
-        local rowCount = self.Rows or 0
+    -- Generic function to create a groupbox
+    function groupHelper:CreateGroup(title, isRight)
+        local row = self.Rows or 0
         local grp = Instance.new("Frame", self.Frame)
         grp.Name                   = title.."Group"
         grp.Size                   = UDim2.new(0,280,0,200)
-        grp.Position               = UDim2.new(0,10,0,10 + rowCount*210)
+        if isRight then
+            grp.Position           = UDim2.new(1,-290,0,10 + row*210)
+        else
+            grp.Position           = UDim2.new(0,10,0,10 + row*210)
+        end
         grp.BackgroundTransparency = 1
         styleFrame(grp)
         local hdr = Instance.new("TextLabel", grp)
@@ -160,31 +165,16 @@ function AuralisUI:AddTab(name)
         hdr.TextSize               = 18
         hdr.TextColor3             = AuralisUI.Colors.Text
         hdr.Text                   = title
-        self.Rows = rowCount + 1
-        return grp
+        self.Rows = row + 1
+        return setmetatable({Parent = grp, Rows = 0}, {__index = AuralisUI.GroupMethods})
     end
 
-    -- Right groupbox
-    function tabObj:AddRightGroupbox(title)
-        local rowCount = self.Rows or 0
-        local grp = Instance.new("Frame", self.Frame)
-        grp.Name                   = title.."Group"
-        grp.Size                   = UDim2.new(0,280,0,200)
-        grp.Position               = UDim2.new(1,-290,0,10 + rowCount*210)
-        grp.BackgroundTransparency = 1
-        styleFrame(grp)
-        local hdr = Instance.new("TextLabel", grp)
-        hdr.Size                   = UDim2.new(1,0,0,24)
-        hdr.BackgroundTransparency = 1
-        hdr.Font                   = Enum.Font.GothamBold
-        hdr.TextSize               = 18
-        hdr.TextColor3             = AuralisUI.Colors.Text
-        hdr.Text                   = title
-        self.Rows = rowCount + 1
-        return grp
-    end
+    -- Expose AddLeftGroupbox and AddRightGroupbox
+    groupHelper.AddLeftGroupbox  = function(self, title) return self:CreateGroup(title, false) end
+    groupHelper.AddRightGroupbox = function(self, title) return self:CreateGroup(title, true)  end
 
-    return setmetatable(tabObj, {__index = AuralisUI.GroupMethods})
+    return setmetatable(groupHelper, groupHelper)
+end(tabObj, {__index = AuralisUI.GroupMethods})
 end
 
 -- GroupMethods container
