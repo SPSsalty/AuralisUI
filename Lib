@@ -141,6 +141,106 @@ function AuralisUI:AddTab(name)
     table.insert(self.Tabs, {Button = btn, Frame = tabFrame})
     if #self.Tabs == 1 then showTab() end
 
+    -- Create helper object for adding groupboxes
+    local tabObj = {Frame = tabFrame, Rows = 0}
+
+    -- Left groupbox
+    function tabObj:AddLeftGroupbox(title)
+        local rowCount = self.Rows or 0
+        local grp = Instance.new("Frame", self.Frame)
+        grp.Name                   = title.."Group"
+        grp.Size                   = UDim2.new(0,280,0,200)
+        grp.Position               = UDim2.new(0,10,0,10 + rowCount*210)
+        grp.BackgroundTransparency = 1
+        styleFrame(grp)
+        local hdr = Instance.new("TextLabel", grp)
+        hdr.Size                   = UDim2.new(1,0,0,24)
+        hdr.BackgroundTransparency = 1
+        hdr.Font                   = Enum.Font.GothamBold
+        hdr.TextSize               = 18
+        hdr.TextColor3             = AuralisUI.Colors.Text
+        hdr.Text                   = title
+        self.Rows = rowCount + 1
+        return grp
+    end
+
+    -- Right groupbox
+    function tabObj:AddRightGroupbox(title)
+        local rowCount = self.Rows or 0
+        local grp = Instance.new("Frame", self.Frame)
+        grp.Name                   = title.."Group"
+        grp.Size                   = UDim2.new(0,280,0,200)
+        grp.Position               = UDim2.new(1,-290,0,10 + rowCount*210)
+        grp.BackgroundTransparency = 1
+        styleFrame(grp)
+        local hdr = Instance.new("TextLabel", grp)
+        hdr.Size                   = UDim2.new(1,0,0,24)
+        hdr.BackgroundTransparency = 1
+        hdr.Font                   = Enum.Font.GothamBold
+        hdr.TextSize               = 18
+        hdr.TextColor3             = AuralisUI.Colors.Text
+        hdr.Text                   = title
+        self.Rows = rowCount + 1
+        return grp
+    end
+
+    return setmetatable(tabObj, {__index = AuralisUI.GroupMethods})
+end
+
+-- GroupMethods container
+AuralisUI.GroupMethods = {}
+
+-- Toggle
+function AuralisUI.GroupMethods:AddToggle(key, opts)
+    local f = Instance.new("Frame", self)
+    f.Size                   = UDim2.new(1,-10,0,30)
+    f.Position               = UDim2.new(0,5,0,30*(self.Parent.Rows-1) + 34)
+    f.BackgroundTransparency = 1
+    local lbl = Instance.new("TextLabel", f)
+    lbl.Size                   = UDim2.new(0.7,0,1,0)
+    lbl.BackgroundTransparency = 1
+    lbl.Font                   = Enum.Font.Gotham
+    lbl.TextSize               = 16
+    lbl.TextColor3             = AuralisUI.Colors.Text
+    lbl.Text                   = opts.Text or key
+    local btn = Instance.new("TextButton", f)
+    btn.Size                   = UDim2.new(0,30,0,20)
+    btn.Position               = UDim2.new(1,-35,0,5)
+    btn.AutoButtonColor        = false
+    btn.BackgroundColor3       = opts.Default and AuralisUI.Colors.Secondary or AuralisUI.Colors.Primary
+    btn.Text                   = ""
+    btn.MouseButton1Click:Connect(function()
+        opts.Default = not opts.Default
+        opts.Callback(opts.Default)
+        TweenService:Create(btn, TweenInfoFast, {BackgroundColor3 = opts.Default and AuralisUI.Colors.Secondary or AuralisUI.Colors.Primary}):Play()
+    end)
+    return btn
+end
+
+-- Button
+function AuralisUI.GroupMethods:AddButton(txt, cb)
+    local r = (self.Rows or 1)-1
+    local b = Instance.new("TextButton", self)
+    b.Size                   = UDim2.new(1,-10,0,30)
+    b.Position               = UDim2.new(0,5,0,30*r + 34)
+    b.Font                   = Enum.Font.Gotham
+    b.TextSize               = 16
+    b.TextColor3             = AuralisUI.Colors.Text
+    b.BackgroundColor3       = AuralisUI.Colors.Secondary
+    b.Text                   = txt
+    b.MouseButton1Click:Connect(cb)
+    self.Rows = r + 2
+    return b
+end
+
+-- Additional GroupMethods (AddSlider, AddDropdown) remain...
+        TweenService:Create(tabFrame, TweenInfoFast, {Position = UDim2.new(0,0,0,0)}):Play()
+    end
+
+    btn.MouseButton1Click:Connect(showTab)
+    table.insert(self.Tabs, {Button = btn, Frame = tabFrame})
+    if #self.Tabs == 1 then showTab() end
+
     return setmetatable({Frame = tabFrame, Rows = 0}, {
         __index = function(self, fn)
             if fn == "AddLeftGroupbox" or fn == "AddRightGroupbox" then
