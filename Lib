@@ -113,7 +113,7 @@ function AuralisUI:CreateWindow(config)
     return window
 end
 
--- AddTab (fixed with nil guards)
+-- AddTab (with Left & Right groupboxes)
 function AuralisUI:AddTab(name)
     local btn = Instance.new("TextButton", self.TabBar)
     btn.Name                   = name.."TabBtn"
@@ -143,13 +143,17 @@ function AuralisUI:AddTab(name)
 
     return setmetatable({Frame = tabFrame, Rows = 0}, {
         __index = function(self, fn)
-            if fn == "AddLeftGroupbox" then
+            if fn == "AddLeftGroupbox" or fn == "AddRightGroupbox" then
                 return function(_, title)
                     local rowCount = (self.Rows or 0)
                     local grp = Instance.new("Frame", self.Frame)
                     grp.Name                   = title.."Group"
                     grp.Size                   = UDim2.new(0,280,0,200)
-                    grp.Position               = UDim2.new(0,10,0,10 + rowCount*210)
+                    if fn == "AddLeftGroupbox" then
+                        grp.Position           = UDim2.new(0,10,0,10 + rowCount*210)
+                    else
+                        grp.Position           = UDim2.new(1,-290,0,10 + rowCount*210)
+                    end
                     grp.BackgroundTransparency = 1
                     styleFrame(grp)
                     local hdr = Instance.new("TextLabel", grp)
@@ -161,7 +165,7 @@ function AuralisUI:AddTab(name)
                     hdr.Text                   = title
                     self.Rows = rowCount + 1
 
-                    return setmetatable({Parent=grp, Row=0}, {
+                    return setmetatable({Parent = grp, Row = 0}, {
                         __index = function(self, method)
                             if method == "AddToggle" then
                                 return function(_, key, opts)
